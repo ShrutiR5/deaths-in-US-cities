@@ -53,7 +53,7 @@ deaths.2016 <- filter(pneumonia.vs.all, Year == 2016)
 
 #2010
 max.2010 <- deaths.2010 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
-min.2010 <- deaths.2010 %>%  filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+min.2010 <- deaths.2010 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
  
 maxmin.2010 <- full_join(max.2010, min.2010)
 
@@ -96,6 +96,10 @@ maxmin.2016 <- full_join(max.2016, min.2016)
 
 
 # Which age/year group had the most deaths combined?
+
+age.groups <- deaths %>% filter(Year > 2009) %>% group_by(Year)
+
+colnames(age.groups)[9:13] <- c("<1", "1-24", "25-44", "45-64", "65+")
 
 # UI Code
 
