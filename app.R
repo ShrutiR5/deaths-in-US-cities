@@ -1,5 +1,4 @@
 library("dplyr")
-library("ggplot")
 library("maps")
 library("tidyr")
 library("sp")
@@ -15,8 +14,12 @@ deaths <- read.csv('data/Deaths_in_122_US_cities.csv', stringsAsFactors = FALSE,
 population <- read.csv('data/population_info.csv', stringsAsFactors = FALSE)
 
 # Creating a new dataframe with the needed columns for analysis. 
-pneuomnia.vs.all <- deaths %>% select(Year, WEEK, City, Pneumonia.and.Influenza.Deaths, All.Deaths) %>% 
+pneumonia.vs.all <- deaths %>% select(Year, WEEK, City, Pneumonia.and.Influenza.Deaths, All.Deaths) %>% 
   filter(Year > 2009)
+
+# Getting the city names
+cities <- (unique(pneumonia.vs.all$City))
+
 
 # Changing of column name called "NAME" to "City" to help innerjoin the two dataframes (deaths & population)"                          
 colnames(population)[9] <- "City"
@@ -28,18 +31,112 @@ colnames(population)[13:19] <- 2010:2016
 estimate.long <- gather(population, 
                         key = Year, 
                         value = ESTIMATE, "2010", "2011", "2012",
-                        "2013", "2014", "2015", "2016"
-                        )
+                        "2013", "2014", "2015", "2016")
+
+estimates <- estimate.long %>% select(Year, City, STNAME, ESTIMATE)
 
 # Making a new dataframe that joins by city 
-city.join <- inner_join(pneuomnia.vs.all, estimate.long, by = "City")
-View(city.join)
+city.join <- inner_join(pneumonia.vs.all, estimate.long, by = "City")
 
 
 # Filtering for lowest and highest death rates 
 
-lowest.and.highest <- filter(pneuomnia.vs.all, All.Deaths == Max
-            )
+deaths.2010 <- filter(pneumonia.vs.all, Year == 2010)
+deaths.2011 <- filter(pneumonia.vs.all, Year == 2011)
+deaths.2012 <- filter(pneumonia.vs.all, Year == 2012)
+deaths.2013 <- filter(pneumonia.vs.all, Year == 2013)
+deaths.2014 <- filter(pneumonia.vs.all, Year == 2014)
+deaths.2015 <- filter(pneumonia.vs.all, Year == 2015)
+deaths.2016 <- filter(pneumonia.vs.all, Year == 2016)
+
+# Max & Min Deaths for each year
+
+#2010
+max.2010 <- deaths.2010 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
+min.2010 <- deaths.2010 %>%  filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+ 
+maxmin.2010 <- full_join(max.2010, min.2010)
 
 
+# 2011
+max.2011 <- deaths.2011 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
+min.2011 <- deaths.2011 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
 
+maxmin.2011 <- full_join(max.2011, min.2011)
+
+# 2012
+max.2012 <- deaths.2012 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
+min.2012 <- deaths.2012 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+
+maxmin.2012 <- full_join(max.2012, min.2012)
+
+# 2013
+max.2013 <- deaths.2013 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
+min.2013 <- deaths.2013 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+
+maxmin.2013 <- full_join(max.2013, min.2013)
+
+# 2014
+max.2014 <- deaths.2014 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
+min.2014 <- deaths.2014 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+
+maxmin.2014 <- full_join(max.2014, min.2014)
+
+# 2015
+max.2015 <- deaths.2015 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
+min.2015 <- deaths.2015 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+
+maxmin.2015 <- full_join(max.2015, min.2015)
+
+# 2016
+max.2016 <- deaths.2016 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
+min.2016 <- deaths.2016 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+
+maxmin.2016 <- full_join(max.2016, min.2016)
+
+
+# Which age/year group had the most deaths combined?
+
+# UI Code
+
+ui<- fluidPage(
+  
+  titlePanel("Mortality Rates in the United States from 2010-2016"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput(
+        inputId = 'city',
+        label = 'Cities',
+        choices = cities
+      ),
+      radioButtons(
+        inputId = "age",
+        label = "Age Range",
+        choices = 1
+      )
+    ),
+    
+     mainPanel(
+      tabsetPanel(
+        id = "tabset",
+        type = "tabs",
+        tabPanel("Background Information", textOutput("BackInfo")),
+        tabPanel("Table", tableOutput("table"))
+      
+        )
+    )
+    ))
+  
+  
+
+
+# Server Code
+
+server <- function(input, output){
+  
+  
+  
+}
+
+shinyApp(ui, server)
