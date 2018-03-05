@@ -98,11 +98,14 @@ maxmin.2016 <- full_join(max.2016, min.2016)
 # Which age/year group had the most deaths combined?
 
 age.groups <- deaths %>% filter(Year > 2009) %>% group_by(Year)
-
+View(age.groups)
 colnames(age.groups)[9:13] <- c("<1", "1-24", "25-44", "45-64", "65+")
 
-# UI Code
+age.group <- gather(age.groups,
+                    key = age.group,
+                    value = agegroup.deaths, "<1", "1-24", "25-44", "45-64", "65+")
 
+# UI Code
 ui<- fluidPage(
   
   titlePanel("Mortality Rates in the United States from 2010-2016"),
