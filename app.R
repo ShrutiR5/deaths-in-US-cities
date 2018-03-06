@@ -130,7 +130,7 @@ ui<- fluidPage(
       selectInput(
         inputId = 'city',
         label = 'Cities',
-        choices = city.names
+        choices = cities
       ),
       radioButtons(
         inputId = "age",
@@ -139,23 +139,24 @@ ui<- fluidPage(
       )
     ),
     
-     mainPanel(
+    mainPanel(
       tabsetPanel(
         id = "tabset",
         type = "tabs",
         tabPanel("Background Information", textOutput("BackInfo")),
-
-        tabPanel("Map", plotOutput("map")),
-
-        tabPanel("Table", tableOutput("table"))
-
-      
+        tabPanel("Table", tableOutput("table")),
+        tabPanel( "Map", plotOutput(
+          "map",
+          width = "100%",
+          height = 400,
+          hover = "map.hover",
+          click = "map.click"
+        ),
+        verbatimTextOutput("country.info")
+        
         )
-    )
-    ))
-  
-
-  
+      )
+    )))
 
 
 
@@ -163,8 +164,24 @@ ui<- fluidPage(
 
 server <- function(input, output){
   
+  output$country.info <- renderPrint({
+    return(GetCountryAtPoint(input$map.click$x, input$map.click$y))
+  })
   
-  
-}
+  output$map <- renderPlot({
+    usa <- map_data("state")
+    
+    # Layout Of Map
+    
+    p <- ggplot()
+    p <- p + geom_polygon(data=usa, aes(x=long, y=lat, group = group),colour="white") + 
+      scale_fill_continuous(low = "thistle2", high = "darkred", guide="colorbar")
+    p <-  geom_map(map = usa,
+                   aes(map_id = region))
+    return(p)
+  })}
+
+
 
 shinyApp(ui, server)
+
