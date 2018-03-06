@@ -11,7 +11,7 @@ library("ggplot2")
 
 # Reading in data files
 deaths <- read.csv('data/Deaths_in_122_US_cities.csv', stringsAsFactors = FALSE, fileEncoding = "UTF-8-BOM")
-population <- read.csv('data/population_info.csv', stringsAsFactors = FALSE)
+population <- read.csv('data/census_info.csv', stringsAsFactors = FALSE)
 
 # Creating a new dataframe with the needed columns for analysis. 
 pneumonia.vs.all <- deaths %>% select(Year, WEEK, City, Pneumonia.and.Influenza.Deaths, All.Deaths) %>% 
@@ -36,8 +36,13 @@ estimate.long <- gather(population,
 estimates <- estimate.long %>% select(Year, City, STNAME, ESTIMATE)
 
 # Making a new dataframe that joins by city 
-city.join <- inner_join(pneumonia.vs.all, estimate.long, by = "City")
+city.join <- left_join(pneumonia.vs.all, estimate.long, by = "City")
+  
+city.population <- city.join %>% filter(Year.x == Year.y)  
 
+city.names <- unique(city.population$City)
+
+View(city.names)
 
 # Filtering for lowest and highest death rates 
 
@@ -132,7 +137,7 @@ ui<- fluidPage(
     )
     ))
   
-  
+View(cities)  
 
 
 # Server Code
