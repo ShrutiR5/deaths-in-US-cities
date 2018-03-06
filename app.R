@@ -11,6 +11,7 @@ library("ggplot2")
 
 # Reading in data files
 deaths <- read.csv('data/Deaths_in_122_US_cities.csv', stringsAsFactors = FALSE, fileEncoding = "UTF-8-BOM")
+
 population <- read.csv('data/census_info.csv', stringsAsFactors = FALSE)
 
 # Creating a new dataframe with the needed columns for analysis. 
@@ -36,23 +37,26 @@ estimate.long <- gather(population,
 estimates <- estimate.long %>% select(Year, City, STNAME, ESTIMATE)
 
 # Making a new dataframe that joins by city 
+
 city.join <- left_join(pneumonia.vs.all, estimate.long, by = "City")
   
 city.population <- city.join %>% filter(Year.x == Year.y)  
 
 city.names <- unique(city.population$City)
 
-View(city.names)
-
 # Filtering for lowest and highest death rates 
 
-deaths.2010 <- filter(pneumonia.vs.all, Year == 2010)
-deaths.2011 <- filter(pneumonia.vs.all, Year == 2011)
-deaths.2012 <- filter(pneumonia.vs.all, Year == 2012)
-deaths.2013 <- filter(pneumonia.vs.all, Year == 2013)
-deaths.2014 <- filter(pneumonia.vs.all, Year == 2014)
-deaths.2015 <- filter(pneumonia.vs.all, Year == 2015)
-deaths.2016 <- filter(pneumonia.vs.all, Year == 2016)
+pneumonia.deaths <- city.population %>% select(Year.x, WEEK, City,
+                                               Pneumonia.and.Influenza.Deaths,
+                                               All.Deaths, STNAME, ESTIMATE)
+
+deaths.2010 <- filter(pneumonia.deaths, Year.x == 2010)
+deaths.2011 <- filter(pneumonia.deaths, Year.x == 2011)
+deaths.2012 <- filter(pneumonia.deaths, Year.x == 2012)
+deaths.2013 <- filter(pneumonia.deaths, Year.x == 2013)
+deaths.2014 <- filter(pneumonia.deaths, Year.x == 2014)
+deaths.2015 <- filter(pneumonia.deaths, Year.x == 2015)
+deaths.2016 <- filter(pneumonia.deaths, Year.x == 2016)
 
 # Max & Min Deaths for each year
 
@@ -108,6 +112,15 @@ colnames(age.groups)[9:13] <- c("<1", "1-24", "25-44", "45-64", "65+")
 
 # UI Code
 
+View(age.groups)
+colnames(age.groups)[9:13] <- c("<1", "1-24", "25-44", "45-64", "65+")
+
+age.group <- gather(age.groups,
+                    key = age.group,
+                    value = agegroup.deaths, "<1", "1-24", "25-44", "45-64", "65+")
+
+# UI Code
+
 ui<- fluidPage(
   
   titlePanel("Mortality Rates in the United States from 2010-2016"),
@@ -117,7 +130,7 @@ ui<- fluidPage(
       selectInput(
         inputId = 'city',
         label = 'Cities',
-        choices = cities
+        choices = city.names
       ),
       radioButtons(
         inputId = "age",
@@ -131,13 +144,19 @@ ui<- fluidPage(
         id = "tabset",
         type = "tabs",
         tabPanel("Background Information", textOutput("BackInfo")),
+
+        tabPanel("Map", plotOutput("map")),
+
         tabPanel("Table", tableOutput("table"))
+
       
         )
     )
     ))
   
-View(cities)  
+
+  
+
 
 
 # Server Code
