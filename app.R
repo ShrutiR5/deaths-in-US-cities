@@ -5,13 +5,16 @@ library("sp")
 library("shiny")
 library("ggplot2")
 
+
+source("spatial_utils.R")
+
 ##########################
 # DATA WRANGLING SECTION #
 ##########################
 
 # Reading in data files
 deaths <- read.csv('data/Deaths_in_122_US_cities.csv', stringsAsFactors = FALSE, fileEncoding = "UTF-8-BOM")
-population <- read.csv('data/population_info.csv', stringsAsFactors = FALSE)
+population <- read.csv('data/census_info.csv', stringsAsFactors = FALSE)
 
 # Creating a new dataframe with the needed columns for analysis. 
 pneumonia.vs.all <- deaths %>% select(Year, WEEK, City, Pneumonia.and.Influenza.Deaths, All.Deaths) %>% 
@@ -126,18 +129,42 @@ ui<- fluidPage(
         id = "tabset",
         type = "tabs",
         tabPanel("Background Information", textOutput("BackInfo")),
-        tabPanel("Table", tableOutput("table"))
+        tabPanel("Table", tableOutput("table")),
+        tabPanel( "Map", plotOutput(
+          "map",
+          width = "100%",
+          height = 400,
+          hover = "map.hover",
+          click = "map.click"
+        ),
+        verbatimTextOutput("country.info")
       
         )
     )
-    ))
-  
+    )))
   
 
 
 # Server Code
 
 server <- function(input, output){
+  
+  output$country.info <- renderPrint({
+    return(GetCountryAtPoint(input$map.click$x, input$map.click$y))
+  })
+  
+  output$map <- renderPlot({
+    usa <- map_data("state")
+   
+ # Layout Of Map
+    
+    p <- ggplot()
+    p <- p + geom_polygon(data=usa, aes(x=long, y=lat, group = group),colour="white") + 
+      scale_fill_continuous(low = "thistle2", high = "darkred", guide="colorbar")
+    p <-  geom_map(map = usa,
+             aes(map_id = region))
+    return(p)
+  })
   
   
   
