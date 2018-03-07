@@ -14,6 +14,7 @@ deaths <- read.csv('data/Deaths_in_122_US_cities.csv', stringsAsFactors = FALSE,
 
 population <- read.csv('data/census_info.csv', stringsAsFactors = FALSE)
 
+ 
 # Creating a new dataframe with the needed columns for analysis. 
 pneumonia.vs.all <- deaths %>% select(Year, WEEK, City, Pneumonia.and.Influenza.Deaths, All.Deaths) %>% 
   filter(Year > 2009)
@@ -112,7 +113,7 @@ colnames(age.groups)[9:13] <- c("<1", "1-24", "25-44", "45-64", "65+")
 
 # UI Code
 
-View(age.groups)
+
 colnames(age.groups)[9:13] <- c("<1", "1-24", "25-44", "45-64", "65+")
 
 age.group <- gather(age.groups,
@@ -143,7 +144,7 @@ ui<- fluidPage(
       tabsetPanel(
         id = "tabset",
         type = "tabs",
-        tabPanel("Background Information", textOutput("BackInfo")),
+        tabPanel("Background Information", htmlOutput("heading"), textOutput("BackInfo")),
         tabPanel("Table", tableOutput("table")),
         tabPanel( "Map", plotOutput(
           "map",
@@ -151,18 +152,48 @@ ui<- fluidPage(
           height = 400,
           hover = "map.hover",
           click = "map.click"
-        ),
-        verbatimTextOutput("country.info")
+        )),
+        verbatimTextOutput("country.info"),
+        tabPanel("Deaths by city", tableOutput("CityDeaths")),
+        tabPanel("Deaths by city Map", plotOutput("CityDeathsMap")),
+        tabPanel("Age Group Deaths", tableOutput("AgeGroup")),
+        tabPanel("Age Groups Trends", plotOutput("Trends")),
+        tabPanel("Age Groups Bar Graphs", plotOutput("Graphs"))
         
-        )
+        ))
       )
-    )))
+    )
 
 
 
 # Server Code
 
 server <- function(input, output){
+  
+  output$heading <- renderUI({
+    return(h1("Introduction"))
+  
+    
+  })
+  
+  output$BackInfo <- renderText({
+    
+  return("This data set consists of information that was reported to 120 
+         Cities Mortality Reporting System.
+         This data set reflects information based on 120 cities across 
+         the United States, it shows the mortality rates and this was created 
+         by looking at the number of death certificates processed 
+         as well as the number of people who died by pneumonia or influenza.
+         This system ran every week for years. 
+         This was grouped by various age ranges, i.e: Under 28 days, 
+         28 days -1 year, 1 - 14 years, 15 - 24 years,
+         25 - 44 years, 45 - 64 years, 65 - 74 years, 75 - 84 years, and 85+ 
+         years. We also have another dataset that consists of information 
+         based of the US population census 2010, it gives an estimate population
+         for each of the cities from 2010-2016. " 
+
+    
+  )})
   
   output$country.info <- renderPrint({
     return(GetCountryAtPoint(input$map.click$x, input$map.click$y))
