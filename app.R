@@ -45,62 +45,112 @@ city.population <- city.join %>% filter(Year.x == Year.y)
 
 city.names <- unique(city.population$City)
 
+city.range <- range(city.population$Year.x)
+
+city.population <- mutate(city.population, "Pneumonia.and.Influenza.Ratio" = 
+                            paste0(Pneumonia.and.Influenza.Deaths / 
+                                     All.Deaths * 100, "%" ))
+
 # Filtering for lowest and highest death rates 
 
 pneumonia.deaths <- city.population %>% select(Year.x, WEEK, City,
                                                Pneumonia.and.Influenza.Deaths,
-                                               All.Deaths, STNAME, ESTIMATE)
+                                               All.Deaths, STNAME, ESTIMATE,
+                                               Pneumonia.and.Influenza.Ratio)
 
-deaths.2010 <- filter(pneumonia.deaths, Year.x == 2010)
-deaths.2011 <- filter(pneumonia.deaths, Year.x == 2011)
-deaths.2012 <- filter(pneumonia.deaths, Year.x == 2012)
-deaths.2013 <- filter(pneumonia.deaths, Year.x == 2013)
-deaths.2014 <- filter(pneumonia.deaths, Year.x == 2014)
-deaths.2015 <- filter(pneumonia.deaths, Year.x == 2015)
-deaths.2016 <- filter(pneumonia.deaths, Year.x == 2016)
+deaths.2010 <- pneumonia.deaths %>% filter(Year.x == 2010) %>% 
+  group_by(City) %>% mutate("Mortality.Rate" = 
+                              paste0(sum(All.Deaths) / ESTIMATE * 100, "%"))
+
+deaths.2011 <- pneumonia.deaths %>% filter(Year.x == 2011) %>% 
+  group_by(City) %>% mutate("Mortality.Rate" = 
+                              paste0(sum(All.Deaths) / ESTIMATE * 100, "%"))
+
+deaths.2012 <- pneumonia.deaths %>% filter(Year.x == 2012) %>% 
+  group_by(City) %>% mutate("Mortality.Rate" = 
+                              paste0(sum(All.Deaths) / ESTIMATE * 100, "%"))
+
+deaths.2013 <- pneumonia.deaths %>% filter(Year.x == 2013) %>% 
+  group_by(City) %>% mutate("Mortality.Rate" = 
+                              paste0(sum(All.Deaths) / ESTIMATE * 100, "%"))
+
+deaths.2014 <- pneumonia.deaths %>% filter(Year.x == 2014) %>% 
+  group_by(City) %>% mutate("Mortality.Rate" = 
+                              paste0(sum(All.Deaths) / ESTIMATE * 100, "%"))
+
+deaths.2015 <- pneumonia.deaths %>% filter(Year.x == 2015) %>% 
+  group_by(City) %>% mutate("Mortality.Rate" = 
+                              paste0(sum(All.Deaths) / ESTIMATE * 100, "%"))
+
+deaths.2016 <- pneumonia.deaths %>% filter(Year.x == 2016) %>% 
+  group_by(City) %>% mutate("Mortality.Rate" = 
+                              paste0(sum(All.Deaths) / ESTIMATE * 100, "%")) 
 
 # Max & Min Deaths for each year
 
 #2010
-max.2010 <- deaths.2010 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
-min.2010 <- deaths.2010 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+max.2010 <- deaths.2010 %>% group_by(City) %>% filter(Mortality.Rate == max(Mortality.Rate,
+                                         na.rm = TRUE)) 
+
+min.2010 <- deaths.2010 %>% filter(Mortality.Rate == min(Mortality.Rate,
+                                        na.rm = TRUE))
  
 maxmin.2010 <- full_join(max.2010, min.2010)
 
 
 # 2011
-max.2011 <- deaths.2011 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
-min.2011 <- deaths.2011 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+max.2011 <- deaths.2011 %>% filter(Mortality.Rate == max(Mortality.Rate,
+                                         na.rm = TRUE)) 
+
+min.2011 <- deaths.2011 %>% filter(Mortality.Rate == min(Mortality.Rate, 
+                                         na.rm = TRUE))
 
 maxmin.2011 <- full_join(max.2011, min.2011)
 
 # 2012
-max.2012 <- deaths.2012 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
-min.2012 <- deaths.2012 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+max.2012 <- deaths.2012 %>% filter(Mortality.Rate == max(Mortality.Rate, 
+                                         na.rm = TRUE)) 
+
+min.2012 <- deaths.2012 %>% filter(Mortality.Rate == min(Mortality.Rate,
+                                         na.rm = TRUE))
 
 maxmin.2012 <- full_join(max.2012, min.2012)
 
 # 2013
-max.2013 <- deaths.2013 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
-min.2013 <- deaths.2013 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+max.2013 <- deaths.2013 %>% filter(Mortality.Rate == max(Mortality.Rate, 
+                                         na.rm = TRUE)) 
+
+min.2013 <- deaths.2013 %>% filter(Mortality.Rate == min(Mortality.Rate,
+                                         na.rm = TRUE))
 
 maxmin.2013 <- full_join(max.2013, min.2013)
 
 # 2014
-max.2014 <- deaths.2014 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
-min.2014 <- deaths.2014 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+max.2014 <- deaths.2014 %>% group_by(City) %>% filter(Mortality.Rate == 
+                                                        max(Mortality.Rate, 
+                                                            na.rm = TRUE)) 
+
+min.2014 <- deaths.2014 %>% group_by(City) %>% filter(Mortality.Rate == 
+                                                        min(Mortality.Rate, 
+                                                            na.rm = TRUE))
 
 maxmin.2014 <- full_join(max.2014, min.2014)
 
 # 2015
-max.2015 <- deaths.2015 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
-min.2015 <- deaths.2015 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+max.2015 <- deaths.2015 %>% filter(Mortality.Rate == max(Mortality.Rate, 
+                                         na.rm = TRUE))
+
+min.2015 <- deaths.2015 %>% filter(Mortality.Rate == min(Mortality.Rate,
+                                         na.rm = TRUE))
 
 maxmin.2015 <- full_join(max.2015, min.2015)
 
 # 2016
-max.2016 <- deaths.2016 %>% filter(All.Deaths == max(All.Deaths, na.rm = TRUE)) 
-min.2016 <- deaths.2016 %>% filter(All.Deaths == min(All.Deaths, na.rm = TRUE))
+max.2016 <- deaths.2016 %>% filter(Mortality.Rate == max(Mortality.Rate,
+                                         na.rm = TRUE)) 
+
+min.2016 <- deaths.2016 %>% filter(Mortality.Rate == min(Mortality.Rate,
+                                         na.rm = TRUE))
 
 maxmin.2016 <- full_join(max.2016, min.2016)
 
@@ -111,14 +161,49 @@ age.groups <- deaths %>% filter(Year > 2009) %>% group_by(Year)
 
 colnames(age.groups)[9:13] <- c("<1", "1-24", "25-44", "45-64", "65+")
 
-# UI Code
-
-
-colnames(age.groups)[9:13] <- c("<1", "1-24", "25-44", "45-64", "65+")
-
 age.group <- gather(age.groups,
                     key = age.group,
                     value = agegroup.deaths, "<1", "1-24", "25-44", "45-64", "65+")
+
+age.ranges <- unique(age.group$age.group)
+
+ages.2010 <- age.group %>% filter(Year == 2010) %>% group_by(age.group) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+ages.2011 <- age.group %>% filter(Year == 2011) %>% group_by(age.group) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+ages.2012 <- age.group %>% filter(Year == 2012) %>% group_by(age.group) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+ages.2013 <- age.group %>% filter(Year == 2013) %>% group_by(age.group) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+ages.2014 <- age.group %>% filter(Year == 2014) %>% group_by(age.group) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+ages.2015 <- age.group %>% filter(Year == 2015) %>% group_by(age.group) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+ages.2016 <- age.group %>% filter(Year == 2016) %>% group_by(age.group) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+first.ages <- age.group %>% filter(age.group == '<1') %>% group_by(Year) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+second.ages <- age.group %>% filter(age.group == '1-24') %>% group_by(Year) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+third.ages <- age.group %>% filter(age.group == '25-44') %>% group_by(Year) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+fourth.ages <- age.group %>% filter(age.group == '45-64') %>% group_by(Year) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+fifth.ages <- age.group %>% filter(age.group == '65+') %>% group_by(Year) %>% 
+  summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+
+
 
 # UI Code
 
@@ -128,6 +213,9 @@ ui<- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
+      sliderInput(
+        inputId = 'year', label = 'Year', min = 2010, 
+        max = 2016, value = 2010),
       selectInput(
         inputId = 'city',
         label = 'Cities',
@@ -136,7 +224,7 @@ ui<- fluidPage(
       radioButtons(
         inputId = "age",
         label = "Age Range",
-        choices = 1
+        choices = age.ranges
       )
     ),
     
@@ -194,6 +282,7 @@ server <- function(input, output){
 
     
   )})
+
   
   output$country.info <- renderPrint({
     return(GetCountryAtPoint(input$map.click$x, input$map.click$y))
