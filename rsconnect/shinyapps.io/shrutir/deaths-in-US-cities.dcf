@@ -1,0 +1,12 @@
+name: deaths-in-US-cities
+title: deaths-in-US-cities
+username:
+account: shrutir
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 295619
+bundleId: 1258519
+url: https://shrutir.shinyapps.io/deaths-in-US-cities/
+when: 1520490107.19314
+asMultiple: FALSE
+asStatic: FALSE

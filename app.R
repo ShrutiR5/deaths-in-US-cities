@@ -146,9 +146,9 @@ ui<- fluidPage(
         tabPanel("Background Information", htmlOutput("heading"), textOutput("BackInfo")),
         tabPanel("Pneumonia and Influenza Deaths", htmlOutput('table.header'), textOutput('table.text'),tableOutput("table")),
         tabPanel( "Map", htmlOutput("mapshead"), textOutput("mapstext"), plotlyOutput("plot")),
-        tabPanel("Deaths by city", htmlOutput("dbchtml"), textOutput("dbctext"), tableOutput("CityDeaths")),
+        tabPanel("Deaths by city", tags$h1("Deaths By City Table"), textOutput("dbctext"), tableOutput("CityDeaths")),
         tabPanel("Age Group Deaths", htmlOutput("agdhtml"), textOutput("agdtext"), tableOutput("AgeGroup")),
-        tabPanel("Age Groups Trends", htmlOutput("trendshtml"), textOutput("trendstext"), plotOutput("Trends")),
+        tabPanel("Age Groups Trends", htmlOutput("trendshtml"), textOutput("trendstext"), plotlyOutput("Trends")),
         tabPanel("Age Groups Bar Graphs",htmlOutput("bghtml"), textOutput("bgtext"), plotOutput("Graphs"))
 
         
@@ -164,16 +164,22 @@ server <- function(input, output){
   
   output$heading <- renderUI({
     return(h1("Introduction"))
-  
     
   })
 
+  output$AgeGroup <- renderTable({
+    return(GetAgeDeaths(input$year))
+  })
   
-  output$AgeGroup <- renderPlot({
+  output$CityDeaths <-renderTable({
+    return(YearlyDeaths(input$year))
+  })
+  
+  output$Graphs <- renderPlot({
     gg <- ggplot(data = GetAgeDeaths(input$year), mapping = aes(x = age.group, y = sum, fill = age.group)) +
       geom_bar(stat = "identity")+
       scale_y_continuous(labels =  scales::comma)
-    
+    return(gg)
     
   })
 
@@ -250,9 +256,7 @@ server <- function(input, output){
              xaxis = list(zeroline = FALSE))
   })
 
-  output$Trends <- renderPlot({
-    
-  })
+
   
   output$table.header <- renderUI({
     return(h1("Pneuomonia vs. Influenza Ratio"))
