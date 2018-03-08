@@ -6,7 +6,6 @@ library("shiny")
 library("ggplot2")
 library("plotly")
 
-
 ##########################
 # DATA WRANGLING SECTION #
 ##########################
@@ -82,13 +81,15 @@ YearlyDeaths <- function(year){
     ungroup(City) %>% filter(Mortality.Rate != 0) %>%
     filter(Mortality.Rate == max(Mortality.Rate))
   
-  min.max <- full_join(min, max)
+  single.max <- head(max, 1)
+  
+  min.max <- full_join(min, single.max)
   
   return(min.max)
   
 }
 
-deaths.2010 <- YearlyDeaths(2016)
+deaths.2010 <- YearlyDeaths(2014)
 
 # Which age/year group had the most deaths combined?
 
@@ -105,15 +106,14 @@ age.ranges <- unique(age.group$age.group)
 GetAgeDeaths <- function(year){
   g <- age.group %>% filter(Year == year) %>% group_by(age.group) %>%
     summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+  return(g)
 }
 
 AgeGroupDeaths <- function(ages){
   t <- age.group %>% filter(age.group == ages) %>% group_by(Year) %>% 
     summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+  return(t)
 }
-
-frist.ages <- AgeGroupDeaths('<1')
-
 
 # UI Code
 
@@ -150,6 +150,7 @@ ui<- fluidPage(
         tabPanel("Age Group Deaths", htmlOutput("agdhtml"), textOutput("agdtext"), tableOutput("AgeGroup")),
         tabPanel("Age Groups Trends", htmlOutput("trendshtml"), textOutput("trendstext"), plotOutput("Trends")),
         tabPanel("Age Groups Bar Graphs",htmlOutput("bghtml"), textOutput("bgtext"), plotOutput("Graphs"))
+
         
         ))))
       
@@ -166,11 +167,16 @@ server <- function(input, output){
   
     
   })
-  output$Table <- renderTable({
-    return("table")
+
+  
+  output$AgeGroup <- renderPlot({
+    gg <- ggplot(data = GetAgeDeaths(input$year), mapping = aes(x = age.group, y = sum, fill = age.group)) +
+      geom_bar(stat = "identity")+
+      scale_y_continuous(labels =  scales::comma)
     
     
   })
+
   output$BackInfo <- renderText({
     
   return("This data set consists of information that was reported to 120 
@@ -194,12 +200,6 @@ server <- function(input, output){
   output$table <- renderTable({
     o <- pneumonia.deaths %>% filter(Year.x == input$year, City == input$city)
     return(o)
-    
-    
-  })
-  
-  output$CityDeaths <- renderTable({
-    return("table")
     
     
   })
@@ -241,22 +241,13 @@ server <- function(input, output){
   })
 
   
-
-  #output$map <- renderPlotly({
-    #usa <- map_data("state")
-    
-    # Layout Of Map
-    
-   # p <- ggplot()
-   # p <- p + geom_polygon(data=usa, aes(x=long, y=lat, group = group),colour="white") + 
-   #   scale_fill_continuous(low = "thistle2", high = "darkred", guide="colorbar")
-   # p <-  geom_map(map = usa,
-                 #  aes(map_id = region))
-  #  return(p)
-  
-  output$AgeGroup <- renderTable({
-    t <- ages.year
-    return(t)
+  output$Trends <- renderPlotly({
+    AgeGroupDeaths(input$age) %>% 
+    plot_ly( x = ~Year, y = ~sum, type = "scatter") %>% 
+      add_trace(mode = "lines", showlegend = FALSE) %>% 
+      layout(title = 'Age Group ',
+             yaxis = list(zeroline = FALSE),
+             xaxis = list(zeroline = FALSE))
   })
 
   output$Trends <- renderPlot({
