@@ -118,6 +118,7 @@ frist.ages <- AgeGroupDeaths('<1')
 # UI Code
 
 ui<- fluidPage(
+  theme = "bootstrap.css",
   
   titlePanel("Mortality Rates in the United States from 2010-2016"),
   
@@ -144,7 +145,7 @@ ui<- fluidPage(
         type = "tabs",
         tabPanel("Background Information", htmlOutput("heading"), textOutput("BackInfo")),
         tabPanel("Pneumonia and Influenza Deaths", htmlOutput('table.header'), textOutput('table.text'),tableOutput("table")),
-        tabPanel( "Map", htmlOutput("mapshead"), textOutput("mapstext"), plotlyOutput("plot"), verbatimTextOutput('country.info')),
+        tabPanel( "Map", htmlOutput("mapshead"), textOutput("mapstext"), plotlyOutput("plot")),
         tabPanel("Deaths by city", htmlOutput("dbchtml"), textOutput("dbctext"), tableOutput("CityDeaths")),
         tabPanel("Age Group Deaths", htmlOutput("agdhtml"), textOutput("agdtext"), tableOutput("AgeGroup")),
         tabPanel("Age Groups Trends", htmlOutput("trendshtml"), textOutput("trendstext"), plotOutput("Trends")),
@@ -203,10 +204,6 @@ server <- function(input, output){
     
   })
 
-  
-  output$country.info <- renderPrint({
-    return(GetCountryAtPoint(input$map.click$x, input$map.click$y))
-  })
   
   output$plot <- renderPlotly({
     year.input <- input$year
