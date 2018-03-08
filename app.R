@@ -4,6 +4,7 @@ library("tidyr")
 library("sp")
 library("shiny")
 library("ggplot2")
+library("plotly")
 
 ##########################
 # DATA WRANGLING SECTION #
@@ -80,13 +81,15 @@ YearlyDeaths <- function(year){
     ungroup(City) %>% filter(Mortality.Rate != 0) %>%
     filter(Mortality.Rate == max(Mortality.Rate))
   
-  min.max <- full_join(min, max)
+  single.max <- head(max, 1)
+  
+  min.max <- full_join(min, single.max)
   
   return(min.max)
   
 }
 
-deaths.2010 <- YearlyDeaths(2016)
+deaths.2010 <- YearlyDeaths(2014)
 
 # Which age/year group had the most deaths combined?
 
@@ -109,6 +112,8 @@ AgeGroupDeaths <- function(ages){
   t <- age.group %>% filter(age.group == ages) %>% group_by(Year) %>% 
     summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
 }
+
+ages <- GetAgeDeaths(2011)
 
 frist.ages <- AgeGroupDeaths('<1')
 
@@ -142,14 +147,13 @@ ui<- fluidPage(
         type = "tabs",
         tabPanel("Background Information", htmlOutput("heading"), textOutput("BackInfo")),
         tabPanel("Table", tableOutput("table")),
-        tabPanel( "Map", plotOutput(
+        tabPanel( "Map", verbatimTextOutput("country.info"), plotOutput(
           "map",
           width = "100%",
           height = 400,
           hover = "map.hover",
           click = "map.click"
         )),
-        verbatimTextOutput("country.info"),
         tabPanel("Deaths by city", tableOutput("CityDeaths")),
         tabPanel("Deaths by city Map", plotOutput("CityDeathsMap")),
         tabPanel("Age Group Deaths", tableOutput("AgeGroup")),
@@ -172,6 +176,14 @@ server <- function(input, output){
     
   })
   
+  output$AgeGroup <- renderPlot({
+    gg <- ggplot(data = GetAgeDeaths(input$year), mapping = aes(x = age.group, y = sum, fill = age.group)) +
+      geom_bar(stat = "identity")+
+      scale_y_continuous(labels =  scales::comma)
+    
+    
+  })
+  
   output$BackInfo <- renderText({
     
   return("This data set consists of information that was reported to 120 
@@ -190,6 +202,13 @@ server <- function(input, output){
 
     
   )})
+  
+  output$Graphs <- renderPlot({
+    g <- ggplot(data = AgeGroupDeaths(2011), aes(x = year, y = sum))
+      geom_quantile()
+    
+    
+  })
 
   
   output$country.info <- renderPrint({
@@ -209,7 +228,14 @@ server <- function(input, output){
     return(p)
   })
   
-  output$Trends <- renderPlot({
+  output$Trends <- renderPlotly({
+    AgeGroupDeaths(input$age) %>% 
+    plot_ly( x = ~Year, y = ~sum, type = "scatter") %>% 
+      add_trace(mode = "lines", showlegend = FALSE) %>% 
+      layout(title = 'Age Group ',
+             yaxis = list(zeroline = FALSE),
+             xaxis = list(zeroline = FALSE))
+      
     
   })
   
