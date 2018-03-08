@@ -4,6 +4,8 @@ library("tidyr")
 library("sp")
 library("shiny")
 library("ggplot2")
+library("plotly")
+
 
 ##########################
 # DATA WRANGLING SECTION #
@@ -232,15 +234,9 @@ ui<- fluidPage(
       tabsetPanel(
         id = "tabset",
         type = "tabs",
-        tabPanel("Background Information", htmlOutput("heading"), textOutput("BackInfo")),
-        tabPanel("Table", tableOutput("table")),
-        tabPanel( "Map", plotOutput(
-          "map",
-          width = "100%",
-          height = 400,
-          hover = "map.hover",
-          click = "map.click"
-        )),
+        tabPanel("Background Information", htmlOutput("heading"), textOutput("BackInfo"), plotlyOutput("plot")),
+        tabPanel("Pneumonia and Influenza Deaths", htmlOutput('table.header'), textOutput('table.text'),tableOutput("table")),
+        tabPanel( "Map", plotlyOutput("plot")),
         verbatimTextOutput("country.info"),
         tabPanel("Deaths by city", tableOutput("CityDeaths")),
         tabPanel("Deaths by city Map", plotOutput("CityDeathsMap")),
@@ -263,7 +259,11 @@ server <- function(input, output){
   
     
   })
-  
+  output$Table <- renderTable({
+    return("table")
+    
+    
+  })
   output$BackInfo <- renderText({
     
   return("This data set consists of information that was reported to 120 
@@ -282,24 +282,78 @@ server <- function(input, output){
 
     
   )})
+  
+  
+  output$table <- renderTable({
+    o <- pneumonia.deaths %>% filter(Year.x == input$year, City == input$city)
+    return(o)
+    
+    
+  })
+  
+  output$CityDeaths <- renderTable({
+    return("table")
+    
+    
+  })
 
   
   output$country.info <- renderPrint({
     return(GetCountryAtPoint(input$map.click$x, input$map.click$y))
   })
   
-  output$map <- renderPlot({
-    usa <- map_data("state")
+  output$plot <- renderPlotly({
+    year.input <- input$year
+    
+    df <- read.csv('data/deaths_in_122_US.cities.csv')
+    Sys.setenv('MAPBOX_TOKEN' = "pk.eyJ1IjoicmFuaWkyMiIsImEiOiJjamVnNDQ3NnExcDZiMzNvN3dtemNkdmF3In0.9xXW1i3CBnuYr4N6TrbJXA")
+    df <- df %>% 
+      filter(State != "", Year == year.input) %>% 
+      group_by(State,City, Year) %>% 
+      na.omit() %>% 
+      summarise(all_death = sum(All.Deaths)) %>% 
+      mutate(name = paste(City, State),
+        hover = paste(City, State,", Death: ",all_death)) %>% 
+      left_join(us.cities) 
+    
+    #p <- 
+      df %>%
+      plot_mapbox(lat = ~lat, lon = ~long, split=~City,mode = 'scattermapbox', text = ~hover, hoverinfo = "text", showlegend = FALSE) %>% 
+        add_markers(size=~all_death, text = ~hover, hoverinfo = "text") %>%
+      layout(title = 'Deaths by Cities',
+             font = list(color='white'),
+             plot_bgcolor = '#191A1A', paper_bgcolor = '#191A1A',
+             mapbox = list(style = 'dark',
+                           zoom = 3),
+             legend = list(orientation = 'h',
+                           font = list(size = 8)),
+             margin = list(l = 25, r = 25,
+                           b = 25, t = 25,
+                           pad = 2))
+    
+    chart_link = plotly_POST(p, filename="mapbox/multiple")
+    chart_link
+    
+    return(p)
+  })
+  
+  #output$map <- renderPlotly({
+    #usa <- map_data("state")
     
     # Layout Of Map
     
-    p <- ggplot()
-    p <- p + geom_polygon(data=usa, aes(x=long, y=lat, group = group),colour="white") + 
-      scale_fill_continuous(low = "thistle2", high = "darkred", guide="colorbar")
-    p <-  geom_map(map = usa,
-                   aes(map_id = region))
-    return(p)
-  })}
+   # p <- ggplot()
+   # p <- p + geom_polygon(data=usa, aes(x=long, y=lat, group = group),colour="white") + 
+   #   scale_fill_continuous(low = "thistle2", high = "darkred", guide="colorbar")
+   # p <-  geom_map(map = usa,
+                 #  aes(map_id = region))
+  #  return(p)
+  
+  output$AgeGroup <- renderTable({
+    t <- ages.year
+    return(t)
+  })
+  }
 
 
 
