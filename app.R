@@ -106,17 +106,14 @@ age.ranges <- unique(age.group$age.group)
 GetAgeDeaths <- function(year){
   g <- age.group %>% filter(Year == year) %>% group_by(age.group) %>%
     summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+  return(g)
 }
 
 AgeGroupDeaths <- function(ages){
   t <- age.group %>% filter(age.group == ages) %>% group_by(Year) %>% 
     summarize(sum = sum(agegroup.deaths, na.rm = TRUE))
+  return(t)
 }
-
-ages <- GetAgeDeaths(2011)
-
-frist.ages <- AgeGroupDeaths('<1')
-
 
 # UI Code
 
@@ -146,23 +143,17 @@ ui<- fluidPage(
         id = "tabset",
         type = "tabs",
         tabPanel("Background Information", htmlOutput("heading"), textOutput("BackInfo")),
-        tabPanel("Table", tableOutput("table")),
-        tabPanel( "Map", verbatimTextOutput("country.info"), plotOutput(
-          "map",
-          width = "100%",
-          height = 400,
-          hover = "map.hover",
-          click = "map.click"
-        )),
-        tabPanel("Deaths by city", tableOutput("CityDeaths")),
-        tabPanel("Deaths by city Map", plotOutput("CityDeathsMap")),
-        tabPanel("Age Group Deaths", tableOutput("AgeGroup")),
-        tabPanel("Age Groups Trends", plotOutput("Trends")),
-        tabPanel("Age Groups Bar Graphs", plotOutput("Graphs"))
+        tabPanel("Pneumonia and Influenza Deaths", htmlOutput('table.header'), textOutput('table.text'),tableOutput("table")),
+        tabPanel( "Map", htmlOutput("mapshead"), textOutput("mapstext"), plotlyOutput("plot"), verbatimTextOutput('country.info')),
+        tabPanel("Deaths by city", htmlOutput("dbchtml"), textOutput("dbctext"), tableOutput("CityDeaths")),
+        tabPanel("Age Group Deaths", htmlOutput("agdhtml"), textOutput("agdtext"), tableOutput("AgeGroup")),
+        tabPanel("Age Groups Trends", htmlOutput("trendshtml"), textOutput("trendstext"), plotOutput("Trends")),
+        tabPanel("Age Groups Bar Graphs",htmlOutput("bghtml"), textOutput("bgtext"), plotOutput("Graphs"))
+
         
-        ))
-      )
-    )
+        ))))
+      
+    
 
 
 
@@ -175,6 +166,7 @@ server <- function(input, output){
   
     
   })
+
   
   output$AgeGroup <- renderPlot({
     gg <- ggplot(data = GetAgeDeaths(input$year), mapping = aes(x = age.group, y = sum, fill = age.group)) +
@@ -183,7 +175,7 @@ server <- function(input, output){
     
     
   })
-  
+
   output$BackInfo <- renderText({
     
   return("This data set consists of information that was reported to 120 
@@ -203,9 +195,10 @@ server <- function(input, output){
     
   )})
   
-  output$Graphs <- renderPlot({
-    g <- ggplot(data = AgeGroupDeaths(2011), aes(x = year, y = sum))
-      geom_quantile()
+  
+  output$table <- renderTable({
+    o <- pneumonia.deaths %>% filter(Year.x == input$year, City == input$city)
+    return(o)
     
     
   })
@@ -215,18 +208,41 @@ server <- function(input, output){
     return(GetCountryAtPoint(input$map.click$x, input$map.click$y))
   })
   
-  output$map <- renderPlot({
-    usa <- map_data("state")
+  output$plot <- renderPlotly({
+    year.input <- input$year
     
-    # Layout Of Map
+    df <- read.csv('data/deaths_in_122_US.cities.csv')
+    Sys.setenv('MAPBOX_TOKEN' = "pk.eyJ1IjoicmFuaWkyMiIsImEiOiJjamVnNDQ3NnExcDZiMzNvN3dtemNkdmF3In0.9xXW1i3CBnuYr4N6TrbJXA")
+    df <- df %>% 
+      filter(State != "", Year == year.input) %>% 
+      group_by(State,City, Year) %>% 
+      na.omit() %>% 
+      summarise(all_death = sum(All.Deaths)) %>% 
+      mutate(name = paste(City, State),
+        hover = paste(City, State,", Death: ",all_death)) %>% 
+      left_join(us.cities) 
     
-    p <- ggplot()
-    p <- p + geom_polygon(data=usa, aes(x=long, y=lat, group = group),colour="white") + 
-      scale_fill_continuous(low = "thistle2", high = "darkred", guide="colorbar")
-    p <-  geom_map(map = usa,
-                   aes(map_id = region))
+    p <- 
+      df %>%
+      plot_mapbox(lat = ~lat, lon = ~long, split=~City,mode = 'scattermapbox', text = ~hover, hoverinfo = "text", showlegend = FALSE) %>% 
+        add_markers(size=~all_death, text = ~hover, hoverinfo = "text") %>%
+      layout(title = 'Deaths by Cities',
+             font = list(color='white'),
+             plot_bgcolor = '#191A1A', paper_bgcolor = '#191A1A',
+             mapbox = list(style = 'dark',
+                           zoom = 3,
+                           center = list(lat = 37.0902,lon =-95.7129)),
+             legend = list(orientation = 'h',
+                           font = list(size = 8)),
+             margin = list(l = 25, r = 25,
+                           b = 25, t = 25,
+                           pad = 2))
+    
+   
+    
     return(p)
   })
+
   
   output$Trends <- renderPlotly({
     AgeGroupDeaths(input$age) %>% 
@@ -235,11 +251,55 @@ server <- function(input, output){
       layout(title = 'Age Group ',
              yaxis = list(zeroline = FALSE),
              xaxis = list(zeroline = FALSE))
-      
+  })
+
+  output$Trends <- renderPlot({
     
   })
   
-  }
+  output$table.header <- renderUI({
+    return(h1("Pneuomonia vs. Influenza Ratio"))
+  })
+  
+  output$table.text <- renderText({
+    return("In this tab the rates of deaths caused by Pneumonia and Influenza can be seen for each year and city in comparison to the total number of deaths.
+")
+  })
+  output$mapshead <- renderUI({
+    return(h1("Deaths By City Map"))
+  })
+  
+  output$mapstext <- renderText({
+    return("This tab shows a map of the United States with information based on the number of deaths in each city per year.
+     You can hover over the dot to see more information.")
+    })
+  output$dbchtml <- renderUI({
+    return(h1("Deaths By City Table"))
+
+  })
+ output$dbctext <- renderText({
+    return("This tab shows a table of the United States with information based on the number 
+         of deaths in each city per year.")
+  })
+ output$agdhtml <- renderUI({
+   return(h1("Deaths By Age Group Table"))
+ })
+ output$agdtext <- renderText({
+   return("In this tab you can see a table of the deaths in each city based on different age groups.")
+ })
+ output$trendshtml <- renderUI({
+   return(h1("Death Trends In Age Groups"))
+ })
+ output$trendstext <- renderText({
+   return("A line graph is shown here that represents a specific age group over the last 7 years.")
+ })
+ output$bghtml <- renderUI({
+   return(h1("Age Group Bar Graphs"))
+ })
+ output$bgtext <- renderText({
+   return("A bar graph will be represented for all age groups in a given year. ")
+})
+}
 
 
 
