@@ -165,7 +165,7 @@ ui <- fluidPage(
         label = 'Year',
         min = 2010,
         max = 2016,
-        value = 2010
+        value = 2010, sep = ""
       ),
       selectInput(
         inputId = 'city',
@@ -201,7 +201,7 @@ ui <- fluidPage(
           plotlyOutput("plot")
         ),
         tabPanel(
-          "Deaths by city",
+          "Max & Min Rates - Deaths By City",
           tags$h1("Deaths By City Table"),
           textOutput("dbctext"),
           tableOutput("CityDeaths")
@@ -403,7 +403,7 @@ output$AgeGroup <- renderTable({
     )
   })
   output$dbchtml <- renderUI({
-    return(h1("Deaths By City Table"))
+    return(h1("Max & Min Rates - Deaths By City Table"))
 
   })
   output$dbctext <- renderText({
@@ -439,3 +439,4 @@ output$AgeGroup <- renderTable({
 
 
 shinyApp(ui, server)
+
